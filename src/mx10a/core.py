@@ -1,3 +1,4 @@
+
 # imports
 import logging
 import pyvisa
@@ -18,13 +19,37 @@ class MX10A:
         # LOAD CONSTANTS
         # set initial states
 
-    def _instruments_query(self, query:str):
-        pass
+    def _instrument_query(self, query:str):
+        try:
+            self.logger.info(f"Sending command: {query}")
+            response = self.inst.query(query)
+            self.check_errors()
+            return response.strip()
+        
+        except VisaIOError as e:
+            self.logger.error(f"Hardware Communication Error during {query}: {e}")
+            return None
 
     def _instrument_write(self, command:str):
-        pass
+        try:
+            self.logger.info(f"Sending command: {command}")
+            # check for operation complete
+            self.inst.write(command)
+            self.logger.info(f"Sending command: *OPC?")
+            self.inst.query ("*OPC?")
+            self.check_errors()
+            return True
+
+        except VisaIOError as e:
+            self.logger.error(f"Hardware Communication Error during command {command}: {e}")
+            return False
 
 # RF Amplifier commands
+    @property
+    def gain_mode(self)->str:
+
+
+
 # MZI COMMANDS
 # VOA Commands
 # System Commands
