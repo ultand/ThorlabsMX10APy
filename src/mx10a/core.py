@@ -3,6 +3,7 @@ import logging
 import pyvisa
 import time
 import atexit
+from pyvisa import VisaIOError
 
 class MX10A:
     def __init__(self, instrument, override_safety = False):
@@ -27,6 +28,20 @@ class MX10A:
 # MZI COMMANDS
 # VOA Commands
 # System Commands
+
+    def close(self):
+        if hasattr(self, 'inst'):
+            try:
+                pass
+            except VisaIOError:
+                self.logger.error("Could not cleanly reset settings during close. Connection may be dead.")
+            finally:
+                try:
+                    self.inst.close()
+                except Exception:
+                    pass
+                del self.inst
+
 
 
 
