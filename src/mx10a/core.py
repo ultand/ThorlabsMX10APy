@@ -36,7 +36,7 @@ class MX10A:
             # check for operation complete
             self.inst.write(command)
             self.logger.info(f"Sending command: *OPC?")
-            self.inst.query ("*OPC?")
+            self.inst.query("*OPC?")
             self.check_errors()
             return True
 
@@ -46,14 +46,23 @@ class MX10A:
 
 # RF Amplifier commands
     @property
-    def gain_mode(self)->str:
+    def amplifier_gain_mode(self)->str:
+        mode = self._instrument_query("AMP:MODE?")
+        return 'Analog' if mode is '0' else 'Digital'
 
+    @property
+    def amplifier_is_enabled(self)->bool:
+        res = self._instrument_query("AMP:POW?")
+        return res in ('1', 'ON')
 
 
 # MZI COMMANDS
 # VOA Commands
 # System Commands
 
+    def check_errors(self):
+        pass
+    
     def close(self):
         if hasattr(self, 'inst'):
             try:
