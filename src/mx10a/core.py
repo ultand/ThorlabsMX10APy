@@ -49,6 +49,17 @@ class MX10A:
     def amplifier_gain_mode(self)->str:
         mode = self._instrument_query("AMP:MODE?")
         return 'Analog' if mode is '0' else 'Digital'
+    
+    @amplifier_gain_mode.setter
+    def amplifier_gain_mode(self, value: str):
+        if value.lower() not in ["digital", "analog"]:
+            pass # should throw an error
+        
+        # there are less verbose ways to type this
+        if value.lower() == "digital":
+            pass
+        elif value.lower() == "analog":
+            pass
 
     @property
     def amplifier_is_enabled(self)->bool:
@@ -57,7 +68,46 @@ class MX10A:
 
 
 # MZI COMMANDS
+    @property
+    def is_mzm_calibrating(self)->bool:
+        pass
+   
+    @property
+    def mzm_dither_amplitude(self)->float:
+        pass
+
+    @property
+    def mzm_dither_frequency(self)->float:
+        pass
+
+    @property
+    def mzm_hold_ratio(self)->float:
+        pass
+
+    @property
+    def mzm_bias_mode(self)->str:
+        pass
+    
+    @property
+    def mzm_status(self)->str:
+        pass
+
+    @property
+    def post_mzm_power_mw(self)->float:
+        pass
+
+    @property
+    def post_mzm_power_dbm(self)->float:
+        pass
+
 # VOA Commands
+    @property
+    def voa_is_enabled(self)->bool:
+        pass
+    @property
+    def voa_attenuation(self)->float:
+        pass
+
 # System Commands
 
     def check_errors(self):
@@ -75,7 +125,3 @@ class MX10A:
                 except Exception:
                     pass
                 del self.inst
-
-
-
-
