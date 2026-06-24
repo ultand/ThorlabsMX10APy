@@ -64,21 +64,24 @@ class MX10A:
     @property
     def amplifier_is_enabled(self)->bool:
         res = self._instrument_query("AMP:POW?")
-        return res in ('1', 'ON')
+        return res in ['1', 'ON']
 
 
 # MZI COMMANDS
     @property
     def is_mzm_calibrating(self)->bool:
-        pass
+        state = self._instrument_query("MZM:CAL?")
+        return state == '0'
    
     @property
     def mzm_dither_amplitude(self)->float:
-        pass
+        amplitude = self._instrument_query("MZM:Dither:AMP?")
+        return float(amplitude)
 
     @property
     def mzm_dither_frequency(self)->float:
-        pass
+        frequency = self._instrument_query("MZM:Dither:FREQ?")
+        return float(frequency)
 
     @property
     def mzm_hold_ratio(self)->float:
@@ -86,11 +89,33 @@ class MX10A:
 
     @property
     def mzm_bias_mode(self)->str:
-        pass
+        mode = self._instrument_query("MZM:MODE?")
+        match mode:
+            case "0":
+                return "Off"
+            case "1":
+                return "Auto Peak"
+            case "2":
+                return "Auto Null"
+            case "3":
+                return "Auto Quad Pos"
+            case "4":
+                return "Auto Quad Neg"
+            case "5":
+                return "Hold Quad Pos"
+            case "6":
+                return "Hold Quad Neg"
+            case "7":
+                return "Manual Voltage"
+            case "8":
+                return "Auto Power Ratio Pos"
+            case "9":
+                return "Auto Power Ratio Neg"
     
     @property
-    def mzm_status(self)->str:
-        pass
+    def is_mzm_at_setpoint(self)->bool:
+        state = self._instrument_query("MZM:SET?")
+        return state == '1'
 
     @property
     def post_mzm_power_mw(self)->float:
