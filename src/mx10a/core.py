@@ -232,6 +232,11 @@ class MX10A:
         bias_voltage = self._instrument_query("MZM:V?")
         return float(bias_voltage)
 
+    # reseting the mzm should probably not be a property
+    @property
+    def _reset_mzm(self):
+        self._instrument_write("MZM:RESET")
+
 # VOA Commands
     @property
     def voa_is_enabled(self)->bool:
@@ -274,7 +279,15 @@ class MX10A:
 
 # System Commands
     def check_errors(self):
-        pass
+        try:
+            for _ in range(ERROR_QUEUE_LIMIT):
+                error_string = self.inst.query("SYST:ERRor?").strip()
+                if not error_string or error_string.startswith('0') or "No error":
+                    break
+
+                self.logger.error(f"MX10A Hardware Error: {error_string}")
+            except Exception as e:
+                self.logger.debug(f"Could not read error queue: {e}")
     
     def close(self):
         if hasattr(self, 'inst'):
