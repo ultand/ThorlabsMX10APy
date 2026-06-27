@@ -5,6 +5,7 @@ import pyvisa
 import time
 import atexit
 from pyvisa import VisaIOError
+from src.mx10a.constants import *
 
 class MX10A:
     def __init__(self, instrument, override_safety = False):
@@ -15,10 +16,15 @@ class MX10A:
         self.inst.read_termination = '\n'
 
         atexit.register(self.close)
-
-        # LOAD CONSTANTS
+        
         # set initial states
 
+        # start the VOA in constant attenuation state
+        self._instrument_write("VOA:MODE: 0")
+        # start with active VOA - safety mechanism
+        self.voa_attenuation = MAX_VOA_ATTENUATION
+        self.voa_is_enabled = True
+        self.
     def _instrument_query(self, query:str):
         try:
             self.logger.info(f"Sending command: {query}")
@@ -62,7 +68,7 @@ class MX10A:
             pass
 
     @property
-    def amplifier_is_enabled(self)->bool:
+    def is_amplifier_enabled(self)->bool:
         res = self._instrument_query("AMP:POW?")
         return res in ['1', 'ON']
 
@@ -85,7 +91,15 @@ class MX10A:
 
     @property
     def mzm_hold_ratio(self)->float:
+        # check that state is auto power ratio
+
         pass
+    @property
+    def mzm_hold_voltage(self)->float:
+        # check that state is manual voltage
+        
+        pass
+
 
     @property
     def mzm_bias_mode(self)->str:
@@ -119,19 +133,60 @@ class MX10A:
 
     @property
     def post_mzm_power_mw(self)->float:
-        pass
+        power = self._instrument_query("MZM:TAP:MW?")
+        return float(power)
 
     @property
     def post_mzm_power_dbm(self)->float:
-        pass
+        power = self._instrument_query("MZM:TAP:DBM?")
+        return float(power)
+
+    @property
+    def mzm_bias_voltage(self)->float:
+        bias_voltage = self._instrument_query("MZM:V?")
+        return float(bias_voltage)
 
 # VOA Commands
     @property
     def voa_is_enabled(self)->bool:
-        pass
+        state = self._instrument_query("VOA:POW?")
+        return bool(state)
+
+    @voa_is_enabled.setter
+    def voa_is_enabled(self, value):
+        state = '1' if value else '0'
+        self._instrument_write(f"VOA:POW: {state}")
+
     @property
-    def voa_attenuation(self)->float:
-        pass
+    def voa_set_attenuation(self)->float:
+        value = self._instrument_query("VOA:ATT?")
+        return float(value)
+    
+    @voa_set_attentuation.setter
+    def voa_set_attenuation(self, value)
+        # check if value is a valid value
+        if value < MIN_VOA_ATTENUATION:
+            pass
+        elif value > MAX_VOA_ATTENUATION:
+            pass
+        
+        self._instrument_write(f"VOA:ATT {value}")
+
+    @property
+    def voa_measured_attenuation(self)->float:
+        value = self._instrument_query("VOA:MEAS?")
+        return float(value)
+
+    @property
+    def voa_measured_optical_output_power_dbm(self)->float:
+        value = self._instrument_query("VOA:TAP:DBM?")
+        return float(value)
+
+    @property
+    def voa_measured_optical_output_power_mw(self)->float:
+        value = self._instrument_query("VOA:TAP:MW?")
+        return float(value)
+
 
 # System Commands
 
