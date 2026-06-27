@@ -135,7 +135,7 @@ class MX10A:
         current_state = self.mzm_bias_mode
         if "auto power" not in current_state.lower():
             self.logger.warning(f"ERROR: Current MZM state is {current_state}. MZM hold ratio only has an effect in auto power modes. Update MZM mode accordingly.")
-        command = f"MZM:HOLD:Ratio {value}"
+
         self._instrument_write(f"MZM:HOLD:Ratio {value}")
         
     @property
@@ -169,7 +169,7 @@ class MX10A:
                 return "Auto Power Ratio Neg"
 
     @mzm_bias_mode.setter
-    def mzm_bias_mode(self, value):
+    def mzm_bias_mode(self, value:str):
         match value.lower():
             case "0" | "off":
                 command = "0"
@@ -222,7 +222,7 @@ class MX10A:
         return bool(state)
 
     @voa_is_enabled.setter
-    def voa_is_enabled(self, value):
+    def voa_is_enabled(self, value: bool):
         state = '1' if value else '0'
         self._instrument_write(f"VOA:POW: {state}")
 
@@ -232,13 +232,11 @@ class MX10A:
         return float(value)
     
     @voa_set_attentuation.setter
-    def voa_set_attenuation(self, value)
+    def voa_set_attenuation(self, value:float)
         # check if value is a valid value
-        if value < MIN_VOA_ATTENUATION:
-            pass
-        elif value > MAX_VOA_ATTENUATION:
-            pass
-        
+        if value < MIN_VOA_ATTENUATION | value > MAX_VOA_ATTENUATION:
+            self.logger.error(f"ERROR: Provided VOA attenuation {value} is outside of software defined range {MIN_VOA_ATTENUATION} - {MAX_VOA_ATTENUATION}. Value not updated.")
+            return
         self._instrument_write(f"VOA:ATT {value}")
 
     @property
