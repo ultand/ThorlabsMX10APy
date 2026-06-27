@@ -51,21 +51,22 @@ class MX10A:
             return False
 
 # RF Amplifier commands
+    # bizarre that gain_mode appears to have opposite write and read commands?
     @property
     def amplifier_gain_mode(self)->str:
         mode = self._instrument_query("AMP:MODE?")
         return 'Analog' if mode is '0' else 'Digital'
-    
+
     @amplifier_gain_mode.setter
     def amplifier_gain_mode(self, value: str):
         if value.lower() not in ["digital", "analog"]:
             pass # should throw an error
         
-        # there are less verbose ways to type this
         if value.lower() == "digital":
-            pass
+            command = "0"
         elif value.lower() == "analog":
-            pass
+            command = "1"
+        self._instrument_write(f"AMP:MODE: {command}")
 
     @property
     def is_amplifier_enabled(self)->bool:
