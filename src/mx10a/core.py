@@ -60,7 +60,10 @@ class MX10A:
     @amplifier_gain_mode.setter
     def amplifier_gain_mode(self, value: str):
         if value.lower() not in ["digital", "analog"]:
-            pass # should throw an error
+            # this may not be the best way to handle this issue. 
+            e_string = "Error: provided amplifier gain mode is neither 'digital' nor 'analog'. Value has not been updated. Please check provided value."
+            self.logger.error(e_string))
+            raise ValueError(e_string)
         
         if value.lower() == "digital":
             command = "0"
@@ -72,7 +75,11 @@ class MX10A:
     def is_amplifier_enabled(self)->bool:
         res = self._instrument_query("AMP:POW?")
         return res in ['1', 'ON']
-
+    
+    @is_amplifier_enabled.setter
+    def is_amplifier_enabled(self, value:bool):
+        command = "1" if value else "0"
+        self._instrument_write(f"AMP:POW: {command}")
 
 # MZI COMMANDS
     @property
@@ -88,10 +95,8 @@ class MX10A:
     @mzm_dither_amplitude.setter
     def mzm_dither_amplitude(self, value:float):
         # check that value is acceptable
-        if value < MZM_DITHER_AMPLITUDE_MINIMUM:
-            pass
-        elif value > MZM_DITHER_AMPLITUDE_MAXIMUM
-            pass
+        if value < MZM_DITHER_AMPLITUDE_MINIMUM | value > MZM_DITHER_AMPLITUDE_MAXIMUM:
+            self.logger.error(f"Error: Provided dither amplitude {value} is outside of software defined range {MZM_DITHER_AMPLITUDE_MINIMUM} -- {MZM_DITHER_AMPLITUDE_MAXIMUM}}. Value not updated.")
         else:
             self._instrument_write(f"MZM:Dither:AMP {value}")
 
@@ -114,9 +119,25 @@ class MX10A:
         # check that state is auto power ratio
         current_state = self.mzm_bias_mode
         if "auto power" not in current_state.lower():
-            # throw an error
-            pass
+            self.logger.warning(f"ERROR: Current MZM state is {current_state}. MZM hold ratio only has an effect in auto power modes. Update MZM mode accordingly.")
+        value = self._instrument_query("MZM:HOLD:Ratio?")
+        return float(value)
 
+    @mzm_hold_ratio.setter
+    def mzm_hold_ratio(self, value:float):
+        
+        # check that value is in allowed range
+        if value < MZM_HOLD_RATIO_MINIMUM | value > MZM_HOLD_RATIO_MAXIMUM:
+            self.logger.error(f"ERROR: Provided hold ratio {value} is outside of software defined range {MZM_HOLD_RATIO_MINIMUM} - {MZM_HOLD_RATIO_MAXIMUM}. Value not updated.")
+            return
+
+        # check that the state is in an auto power mode
+        current_state = self.mzm_bias_mode
+        if "auto power" not in current_state.lower():
+            self.logger.warning(f"ERROR: Current MZM state is {current_state}. MZM hold ratio only has an effect in auto power modes. Update MZM mode accordingly.")
+        command = f"MZM:HOLD:Ratio {value}"
+        self._instrument_write(f"MZM:HOLD:Ratio {value}")
+        
     @property
     def mzm_hold_voltage(self)->float:
         # check that state is manual voltage
@@ -237,7 +258,6 @@ class MX10A:
 
 
 # System Commands
-
     def check_errors(self):
         pass
     
