@@ -81,6 +81,20 @@ class MX10A:
         command = "1" if value else "0"
         self._instrument_write(f"AMP:POW: {command}")
 
+    @property
+    def amplifier_gain(self)->float:
+        value = self._instrument_query("AMP:GAIN?")
+        return float(value)
+
+    @amplifier_gain.setter
+    def amplifier_gain(self, value:float):
+        if value < AMPLIFIER_GAIN_MINIMUM | value > AMPLIFIER_GAIN_MAXIMUM: 
+            self.logger.error(f"Error: Provided amplifier gain {value} is outside of software defined range {AMPLIFIER_GAIN_MINIMUM} -- {AMPLIFIER_GAIN_MAXIMUM}. Value not updated.")
+            return
+        self._instrument_write(f"AMP:GAIN {value}")
+
+    # set the amplifier swing
+
 # MZI COMMANDS
     @property
     def is_mzm_calibrating(self)->bool:
