@@ -141,7 +141,24 @@ class MX10A:
     @property
     def mzm_hold_voltage(self)->float:
         # check that state is manual voltage
-        pass
+        current_state = self.mzm_bias_mode
+        if current_state.lower() is not "manual voltage":
+            self.logger.warning("WARNING: MZM mode is not Manual Voltage. Hold voltage is not currently being used.")
+        
+        value = self._instrument_query("MZM:HOLD:V?")
+        return float(value)
+
+    @mzm_hold_voltage.setter
+    def mzm_hold_voltage(self, value:float):
+        if value < MZM_MANUAL_VOLTAGE_MIN | value > MZM_MANUAL_VOLTAGE_MAX:
+            self.logger.error(f"ERROR: Provided manual voltage {value} is outside software defined range {MZM_MANUAL_VOLTAGE_MIN} - {MZM_MANUAL_VOLTAGE_MAX}. Value has not been updated.")
+            return
+        
+        current_state = self.mzm_bias_mode
+        if current_state.lower() is not "manual voltage":
+            self.logger.warning("WARNING: MZM mode is not Manual Voltage. Hold voltage is not currently being used.")
+
+        self._instrument_write(f"MZM:HOLD:V {value}")
 
     @property
     def mzm_bias_mode(self)->str:
