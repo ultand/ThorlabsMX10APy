@@ -303,6 +303,27 @@ class MX10A:
             except Exception as e:
                 self.logger.debug(f"Could not read error queue: {e}")
     
+    def system_serial_number(self):
+        return self._instrument_query("SYS:SER?")
+    
+    def system_bootloader(self):
+        return self._instrument_query("SYS:BOOT?")
+
+    def system_firmware(self):
+        return self._instrument_query("SYS:FIRM?")
+
+    def system_hardware(self):
+        return self._instrument_query("SYS:HARD?")
+
+    def system_restart(self):
+        self._instrument_write("SYS:RESTART")
+
+    def system_sleep(self):
+        self._instrument_write("SYS:SLEEP")
+
+    def system_wake(self):
+        self._instrument_query("SYS:WAKE")
+
     def close(self):
         if hasattr(self, 'inst'):
             try:
@@ -315,3 +336,4 @@ class MX10A:
                 except Exception:
                     pass
                 del self.inst
+                
