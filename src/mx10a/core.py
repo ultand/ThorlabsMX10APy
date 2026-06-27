@@ -24,7 +24,7 @@ class MX10A:
         # start with active VOA - safety mechanism
         self.voa_attenuation = MAX_VOA_ATTENUATION
         self.voa_is_enabled = True
-        self.
+    
     def _instrument_query(self, query:str):
         try:
             self.logger.info(f"Sending command: {query}")
@@ -84,22 +84,42 @@ class MX10A:
         amplitude = self._instrument_query("MZM:Dither:AMP?")
         return float(amplitude)
 
+    @mzm_dither_amplitude.setter
+    def mzm_dither_amplitude(self, value:float):
+        # check that value is acceptable
+        if value < MZM_DITHER_AMPLITUDE_MINIMUM:
+            pass
+        elif value > MZM_DITHER_AMPLITUDE_MAXIMUM
+            pass
+        else:
+            self._instrument_write(f"MZM:Dither:AMP {value}")
+
     @property
     def mzm_dither_frequency(self)->float:
         frequency = self._instrument_query("MZM:Dither:FREQ?")
         return float(frequency)
+    
+    @mzm_dither_frequency.setter
+    def mzm_dither_frequency(self, value: float):
+        if value < MZM_DITHER_FREQUENCY_MINIMUM:
+            pass
+        elif value > MZM_DITHER_FREQUENCY_MAXIMUM:
+            pass
+        else:
+            self._instrument_write(f"MZM:Dither:FREQ {value}")
 
     @property
     def mzm_hold_ratio(self)->float:
         # check that state is auto power ratio
+        current_state = self.mzm_bias_mode
+        if "auto power" not in current_state.lower():
+            # throw an error
+            pass
 
-        pass
     @property
     def mzm_hold_voltage(self)->float:
         # check that state is manual voltage
-        
         pass
-
 
     @property
     def mzm_bias_mode(self)->str:
@@ -125,7 +145,34 @@ class MX10A:
                 return "Auto Power Ratio Pos"
             case "9":
                 return "Auto Power Ratio Neg"
-    
+
+    @mzm_bias_mode.setter
+    def mzm_bias_mode(self, value):
+        match value.lower():
+            case "0" | "off":
+                command = "0"
+            case "1" | "auto peak":
+                command  = "1"
+            case "2" | "auto null":
+                command = "2"
+            case "3" | "auto quad pos":
+                command = "3"
+            case "4" | "auto quad neg":
+                command = "4"
+            case "5" | "hold quad pos":
+                command = "5"
+            case "6" | "hold quad neg":
+                command = "6"
+            case "7" | "manual voltage":
+                command = "7"
+            case "8" |  "auto power ratio pos":
+                command = "8"
+            case "9" | "auto power ratio neg":
+                command = "9"
+            case _:
+                pass
+        self._instrument_write(f"MZM:MODE: {command}")
+
     @property
     def is_mzm_at_setpoint(self)->bool:
         state = self._instrument_query("MZM:SET?")
