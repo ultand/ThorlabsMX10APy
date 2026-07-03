@@ -25,7 +25,7 @@ class MX10A:
         self.voa_attenuation = MAX_VOA_ATTENUATION
         self.voa_is_enabled = True
     
-    def _instrument_query(self, query:str):
+    def _instrument_query(self, query:str) -> str:
         try:
             self.logger.info(f"Sending command: {query}")
             response = self.inst.query(query)
@@ -34,7 +34,7 @@ class MX10A:
         
         except VisaIOError as e:
             self.logger.error(f"Hardware Communication Error during {query}: {e}")
-            return None
+            return "Query Failed..."
 
     def _instrument_write(self, command:str):
         try:
@@ -62,7 +62,7 @@ class MX10A:
         if value.lower() not in ["digital", "analog"]:
             # this may not be the best way to handle this issue. 
             e_string = "Error: provided amplifier gain mode is neither 'digital' nor 'analog'. Value has not been updated. Please check provided value."
-            self.logger.error(e_string))
+            self.logger.error(e_string)
             raise ValueError(e_string)
         
         if value.lower() == "digital":
@@ -88,7 +88,7 @@ class MX10A:
 
     @amplifier_gain.setter
     def amplifier_gain(self, value:float):
-        if value < AMPLIFIER_GAIN_MINIMUM | value > AMPLIFIER_GAIN_MAXIMUM: 
+        if (value < AMPLIFIER_GAIN_MINIMUM) | (value > AMPLIFIER_GAIN_MAXIMUM): 
             self.logger.error(f"Error: Provided amplifier gain {value} is outside of software defined range {AMPLIFIER_GAIN_MINIMUM} -- {AMPLIFIER_GAIN_MAXIMUM}. Value not updated.")
             return
         self._instrument_write(f"AMP:GAIN {value}")
@@ -109,8 +109,8 @@ class MX10A:
     @mzm_dither_amplitude.setter
     def mzm_dither_amplitude(self, value:float):
         # check that value is acceptable
-        if value < MZM_DITHER_AMPLITUDE_MINIMUM | value > MZM_DITHER_AMPLITUDE_MAXIMUM:
-            self.logger.error(f"Error: Provided dither amplitude {value} is outside of software defined range {MZM_DITHER_AMPLITUDE_MINIMUM} -- {MZM_DITHER_AMPLITUDE_MAXIMUM}}. Value not updated.")
+        if (value < MZM_DITHER_AMPLITUDE_MINIMUM) | (value > MZM_DITHER_AMPLITUDE_MAXIMUM):
+            self.logger.error(f"Error: Provided dither amplitude {value} is outside of software defined range {MZM_DITHER_AMPLITUDE_MINIMUM} -- {MZM_DITHER_AMPLITUDE_MAXIMUM}. Value not updated.")
         else:
             self._instrument_write(f"MZM:Dither:AMP {value}")
 
@@ -141,7 +141,7 @@ class MX10A:
     def mzm_hold_ratio(self, value:float):
         
         # check that value is in allowed range
-        if value < MZM_HOLD_RATIO_MINIMUM | value > MZM_HOLD_RATIO_MAXIMUM:
+        if (value < MZM_HOLD_RATIO_MINIMUM) | (value > MZM_HOLD_RATIO_MAXIMUM):
             self.logger.error(f"ERROR: Provided hold ratio {value} is outside of software defined range {MZM_HOLD_RATIO_MINIMUM} - {MZM_HOLD_RATIO_MAXIMUM}. Value not updated.")
             return
 
@@ -164,8 +164,8 @@ class MX10A:
 
     @mzm_hold_voltage.setter
     def mzm_hold_voltage(self, value:float):
-        if value < MZM_MANUAL_VOLTAGE_MIN | value > MZM_MANUAL_VOLTAGE_MAX:
-            self.logger.error(f"ERROR: Provided manual voltage {value} is outside software defined range {MZM_MANUAL_VOLTAGE_MIN} - {MZM_MANUAL_VOLTAGE_MAX}. Value has not been updated.")
+        if (value < MZM_MANUAL_VOLTAGE_MINIMUM) | (value > MZM_MANUAL_VOLTAGE_MAXIMUM):
+            self.logger.error(f"ERROR: Provided manual voltage {value} is outside software defined range {MZM_MANUAL_VOLTAGE_MINIMUM} - {MZM_MANUAL_VOLTAGE_MAXIMUM}. Value has not been updated.")
             return
         
         current_state = self.mzm_bias_mode
@@ -198,6 +198,8 @@ class MX10A:
                 return "Auto Power Ratio Pos"
             case "9":
                 return "Auto Power Ratio Neg"
+            case _:
+                return "Unknown Mode..."
 
     @mzm_bias_mode.setter
     def mzm_bias_mode(self, value:str):
@@ -267,10 +269,10 @@ class MX10A:
         value = self._instrument_query("VOA:ATT?")
         return float(value)
     
-    @voa_set_attentuation.setter
-    def voa_set_attenuation(self, value:float)
+    @voa_set_attenuation.setter
+    def voa_set_attenuation(self, value:float):
         # check if value is a valid value
-        if value < MIN_VOA_ATTENUATION | value > MAX_VOA_ATTENUATION:
+        if (value < MIN_VOA_ATTENUATION) | (value > MAX_VOA_ATTENUATION):
             self.logger.error(f"ERROR: Provided VOA attenuation {value} is outside of software defined range {MIN_VOA_ATTENUATION} - {MAX_VOA_ATTENUATION}. Value not updated.")
             return
         self._instrument_write(f"VOA:ATT {value}")
@@ -300,8 +302,8 @@ class MX10A:
                     break
 
                 self.logger.error(f"MX10A Hardware Error: {error_string}")
-            except Exception as e:
-                self.logger.debug(f"Could not read error queue: {e}")
+        except Exception as e:
+            self.logger.debug(f"Could not read error queue: {e}")
     
     def system_serial_number(self):
         return self._instrument_query("SYS:SER?")
